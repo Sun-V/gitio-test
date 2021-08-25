@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="google-site-verification" content="YqIYGKZUeDLKHcV1qo7lY0jNq3B4kYSL9CIur9RJJl0" />    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="日常摸鱼">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        持久卷的动态卷配置及通过Statefulset部署应用 - undefined
+        
+    </title>
+
+    <!-- Custom CSS -->
+    
+<link rel="stylesheet" href="/css/aircloud.css">
+
+    
+<link rel="stylesheet" href="/css/gitment.css">
+
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> 富强    民主    文明    和谐    自由    平等    公正    法治    爱国    敬业    诚信    友善 </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar">
+            <img src="/img/favicon.ico" />
+        </div>
+        <div class="name">
+            <i>SunV</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archives">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E6%90%AD%E5%BB%BANFS%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-text">1. 搭建NFS服务器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E5%88%9B%E5%BB%BARBAC%E6%8E%88%E6%9D%83"><span class="toc-text">2. 创建RBAC授权</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E5%88%9B%E5%BB%BAStorageClass"><span class="toc-text">3. 创建StorageClass</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-%E5%88%9B%E5%BB%BAprovisioner"><span class="toc-text">4. 创建provisioner</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-%E5%88%9B%E5%BB%BAStatefulset"><span class="toc-text">5. 创建Statefulset</span></a></li></ol>
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+        <div class="index-about-mobile">
+            <i> 富强    民主    文明    和谐    自由    平等    公正    法治    爱国    敬业    诚信    友善 </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        持久卷的动态卷配置及通过Statefulset部署应用
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2021-08-23 11:07:52</span></span>
+        
+        <span class="attr">标签：/
+        
+        <a class="tag" href="/tags/#k8s" title="k8s">k8s</a>
+        <span>/</span>
+        
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <h1 id="1-搭建NFS服务器"><a href="#1-搭建NFS服务器" class="headerlink" title="1. 搭建NFS服务器"></a>1. 搭建NFS服务器</h1><p>NFS服务器的搭建参考了<a target="_blank" rel="noopener" href="https://www.huaweicloud.com/articles/c2b03c66245eec9ed1833f3e7e736a50.html">K8s持久化存储【使用NFS】</a> 、<a target="_blank" rel="noopener" href="https://qizhanming.com/blog/2018/08/08/how-to-install-nfs-on-centos-7">CentOS 7 下 yum 安装和配置 NFS</a> 两篇文章，其中要注意客户端部分的安装需要在K8s所有节点进行。<br>本文中NFS服务器的IP为：192.168.111.103，共享目录为/data，相对应地，/etc/exports中添加内容为<br><code>/data/     192.168.111.0/24(insecure,rw,sync,no_root_squash,no_all_squash)</code></p>
+<p>以下内容主要参考了<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000024512057">程立笔记</a>以及《kubernetes in action中文版》</p>
+<h1 id="2-创建RBAC授权"><a href="#2-创建RBAC授权" class="headerlink" title="2. 创建RBAC授权"></a>2. 创建RBAC授权</h1><p>创建provisioner的ServiceAccount，并对其进行RBAC授权。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"># rbac.yaml</span><br><span class="line"></span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: ServiceAccount</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">---</span><br><span class="line">kind: ClusterRole</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner-runner</span><br><span class="line">rules:</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;persistentvolumes&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;delete&quot;]</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;persistentvolumeclaims&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;update&quot;]</span><br><span class="line">  - apiGroups: [&quot;storage.k8s.io&quot;]</span><br><span class="line">    resources: [&quot;storageclasses&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;events&quot;]</span><br><span class="line">    verbs: [&quot;create&quot;, &quot;update&quot;, &quot;patch&quot;]</span><br><span class="line">---</span><br><span class="line">kind: ClusterRoleBinding</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: run-nfs-client-provisioner</span><br><span class="line">subjects:</span><br><span class="line">  - kind: ServiceAccount</span><br><span class="line">    name: nfs-client-provisioner</span><br><span class="line">    # replace with namespace where provisioner is deployed</span><br><span class="line">    namespace: default</span><br><span class="line">roleRef:</span><br><span class="line">  kind: ClusterRole</span><br><span class="line">  name: nfs-client-provisioner-runner</span><br><span class="line">  apiGroup: rbac.authorization.k8s.io</span><br><span class="line">---</span><br><span class="line">kind: Role</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">rules:</span><br><span class="line">  - apiGroups: [&quot;&quot;]</span><br><span class="line">    resources: [&quot;endpoints&quot;]</span><br><span class="line">    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;update&quot;, &quot;patch&quot;]</span><br><span class="line">---</span><br><span class="line">kind: RoleBinding</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">subjects:</span><br><span class="line">  - kind: ServiceAccount</span><br><span class="line">    name: nfs-client-provisioner</span><br><span class="line">    # replace with namespace where provisioner is deployed</span><br><span class="line">    namespace: default</span><br><span class="line">roleRef:</span><br><span class="line">  kind: Role</span><br><span class="line">  name: leader-locking-nfs-client-provisioner</span><br><span class="line">  apiGroup: rbac.authorization.k8s.io</span><br></pre></td></tr></table></figure>
+<h1 id="3-创建StorageClass"><a href="#3-创建StorageClass" class="headerlink" title="3. 创建StorageClass"></a>3. 创建StorageClass</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># storageclass-nfs.yaml</span><br><span class="line"></span><br><span class="line">apiVersion: storage.k8s.io/v1</span><br><span class="line">kind: StorageClass</span><br><span class="line">metadata:</span><br><span class="line">  name: managed-nfs-storage</span><br><span class="line">provisioner: fuseim.pri/ifs</span><br><span class="line">parameters:</span><br><span class="line">  archiveOnDelete: &quot;false&quot;</span><br></pre></td></tr></table></figure>
+<h1 id="4-创建provisioner"><a href="#4-创建provisioner" class="headerlink" title="4. 创建provisioner"></a>4. 创建provisioner</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"># nfs-client-provisioner.yaml</span><br><span class="line"></span><br><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: Deployment</span><br><span class="line">metadata:</span><br><span class="line">  name: nfs-client-provisioner</span><br><span class="line">  labels:</span><br><span class="line">    app: nfs-client-provisioner</span><br><span class="line">  # replace with namespace where provisioner is deployed</span><br><span class="line">  namespace: default</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  strategy:</span><br><span class="line">    type: Recreate</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: nfs-client-provisioner</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: nfs-client-provisioner</span><br><span class="line">    spec:</span><br><span class="line">      serviceAccountName: nfs-client-provisioner</span><br><span class="line">      containers:</span><br><span class="line">        - name: nfs-client-provisioner</span><br><span class="line">          image: sunjqv/nfs-subdir-external-provisioner:v4.0.0</span><br><span class="line">          volumeMounts:</span><br><span class="line">            - name: nfs-client-root</span><br><span class="line">              mountPath: /persistentvolumes</span><br><span class="line">          env:</span><br><span class="line">            - name: PROVISIONER_NAME</span><br><span class="line">              value: fuseim.pri/ifs</span><br><span class="line">            - name: NFS_SERVER</span><br><span class="line">              # 替换为自己NFS的ip</span><br><span class="line">              value: 192.168.111.103</span><br><span class="line">            - name: NFS_PATH</span><br><span class="line">              value: /data</span><br><span class="line">      volumes:</span><br><span class="line">        - name: nfs-client-root</span><br><span class="line">          nfs:</span><br><span class="line">            # 注意替换ip</span><br><span class="line">            server: 192.168.111.103</span><br><span class="line">            path: /data</span><br></pre></td></tr></table></figure>
+<p>在网上许多文章中，spec.template.spec.containers.image配置的provisioner不再适合1.20.0+版本的k8s，会出现无法动态构建pv的问题，具体问题信息表现为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[root@master k8sfiles]# kubectl describe pvc data-kubia-0</span><br><span class="line">Name:          data-kubia-0</span><br><span class="line">Namespace:     default</span><br><span class="line">StorageClass:  managed-nfs-storage</span><br><span class="line">Status:        Pending</span><br><span class="line">Volume:        </span><br><span class="line">Labels:        app=kubia</span><br><span class="line">Annotations:   volume.beta.kubernetes.io/storage-provisioner: fuseim.pri/ifs</span><br><span class="line">Finalizers:    [kubernetes.io/pvc-protection]</span><br><span class="line">Capacity:      </span><br><span class="line">Access Modes:  </span><br><span class="line">VolumeMode:    Filesystem</span><br><span class="line">Used By:       kubia-0</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason                Age                 From                         Message</span><br><span class="line">  ----    ------                ----                ----                         -------</span><br><span class="line">  Normal  ExternalProvisioning  6s (x10 over 2m2s)  persistentvolume-controller  waiting for a volume to be created, either by external provisioner &quot;fuseim.pri/ifs&quot; or manually created by system administrator</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#查看对应pod的日志</span><br><span class="line"></span><br><span class="line">[root@master k8sfiles]# kubectl logs -f nfs-client-provisioner-9547dc76b-6g4wj </span><br><span class="line">I0819 01:26:01.017938       1 leaderelection.go:185] attempting to acquire leader lease  default/fuseim.pri-ifs...</span><br><span class="line">E0819 01:26:18.445583       1 event.go:259] Could not construct reference to: &#x27;&amp;v1.Endpoints&#123;TypeMeta:v1.TypeMeta&#123;Kind:&quot;&quot;, APIVersion:&quot;&quot;&#125;, ObjectMeta:v1.ObjectMeta&#123;Name:&quot;fuseim.pri-ifs&quot;, GenerateName:&quot;&quot;, Namespace:&quot;default&quot;, SelfLink:&quot;&quot;, UID:&quot;c55af7a2-b250-4c45-9cb2-19aa95610dbf&quot;, ResourceVersion:&quot;1083335&quot;, Generation:0, CreationTimestamp:v1.Time&#123;Time:time.Time&#123;wall:0x0, ext:63764873777, loc:(*time.Location)(0x1956800)&#125;&#125;, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string(nil), Annotations:map[string]string&#123;&quot;control-plane.alpha.kubernetes.io/leader&quot;:&quot;&#123;\&quot;holderIdentity\&quot;:\&quot;nfs-client-provisioner-9547dc76b-6g4wj_69af896c-008c-11ec-b671-620ce41148af\&quot;,\&quot;leaseDurationSeconds\&quot;:15,\&quot;acquireTime\&quot;:\&quot;2021-08-19T01:26:18Z\&quot;,\&quot;renewTime\&quot;:\&quot;2021-08-19T01:26:18Z\&quot;,\&quot;leaderTransitions\&quot;:2&#125;&quot;&#125;, OwnerReferences:[]v1.OwnerReference(nil), Initializers:(*v1.Initializers)(nil), Finalizers:[]string(nil), ClusterName:&quot;&quot;&#125;, Subsets:[]v1.EndpointSubset(nil)&#125;&#x27; due to: &#x27;selfLink was empty, can&#x27;t make reference&#x27;. Will not report event: &#x27;Normal&#x27; &#x27;LeaderElection&#x27; &#x27;nfs-client-provisioner-9547dc76b-6g4wj_69af896c-008c-11ec-b671-620ce41148af became leader&#x27;</span><br><span class="line">I0819 01:26:18.445645       1 leaderelection.go:194] successfully acquired lease default/fuseim.pri-ifs</span><br><span class="line">I0819 01:26:18.445737       1 controller.go:631] Starting provisioner controller fuseim.pri/ifs_nfs-client-provisioner-9547dc76b-6g4wj_69af896c-008c-11ec-b671-620ce41148af!</span><br><span class="line">I0819 01:26:18.546716       1 controller.go:680] Started provisioner controller fuseim.pri/ifs_nfs-client-provisioner-9547dc76b-6g4wj_69af896c-008c-11ec-b671-620ce41148af!</span><br><span class="line">I0819 01:39:26.997185       1 controller.go:987] provision &quot;default/data-kubia-0&quot; class &quot;managed-nfs-storage&quot;: started</span><br><span class="line">E0819 01:39:27.006858       1 controller.go:1004] provision &quot;default/data-kubia-0&quot; class &quot;managed-nfs-storage&quot;: unexpected error getting claim reference: selfLink was empty, can&#x27;t make reference</span><br><span class="line">I0819 01:41:18.449551       1 controller.go:987] provision &quot;default/data-kubia-0&quot; class &quot;managed-nfs-storage&quot;: started</span><br><span class="line">E0819 01:41:18.452684       1 controller.go:1004] provision &quot;default/data-kubia-0&quot; class &quot;managed-nfs-storage&quot;: unexpected error getting claim reference: selfLink was empty, can&#x27;t make reference</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>即pvc在“waiting for a volume to be created”，错误原因则是“selfLink was empty, can’t make reference”。经过搜索得知，原来selfLink已经在k8sv1.20.0及以后的版本上弃用，<a target="_blank" rel="noopener" href="https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/issues/25">这里</a>也给出了新的provisioner image：<code>gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:v4.0.0</code>。但由于gcr.io在大陆访问不便，在上面的yaml文件中，我将其替换成了dockerhub镜像：sunjqv/nfs-subdir-external-provisioner:v4.0.0。</p>
+<h1 id="5-创建Statefulset"><a href="#5-创建Statefulset" class="headerlink" title="5. 创建Statefulset"></a>5. 创建Statefulset</h1><p>在部署Statufulset之前，创建一个用于在有状态的pod之间提供网络标识的headless Service</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># kubia-svc-headless.yaml</span><br><span class="line"></span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  name: kubia</span><br><span class="line">  labels:</span><br><span class="line">    app: kubia</span><br><span class="line">spec:</span><br><span class="line">  ports:</span><br><span class="line">  - port: 80</span><br><span class="line">    name: http</span><br><span class="line">  clusterIP: None</span><br><span class="line">  selector:</span><br><span class="line">    app: kubia</span><br></pre></td></tr></table></figure>
+<p>最后创建Statefulset</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"># kubia-statefulset</span><br><span class="line"></span><br><span class="line">apiVersion: apps/v1</span><br><span class="line">kind: StatefulSet</span><br><span class="line">metadata:</span><br><span class="line">  name: kubia</span><br><span class="line">spec:</span><br><span class="line">  serviceName: kubia</span><br><span class="line">  replicas: 2</span><br><span class="line">  selector:</span><br><span class="line">    matchLabels:</span><br><span class="line">      app: kubia # has to match .spec.template.metadata.labels</span><br><span class="line">  template:</span><br><span class="line">    metadata:</span><br><span class="line">      labels:</span><br><span class="line">        app: kubia</span><br><span class="line">    spec:</span><br><span class="line">      terminationGracePeriodSeconds: 10</span><br><span class="line">      serviceAccount: nfs-client-provisioner</span><br><span class="line">      containers:</span><br><span class="line">      - name: kubia</span><br><span class="line">        image: luksa/kubia-pet</span><br><span class="line">        ports:</span><br><span class="line">        - containerPort: 8080</span><br><span class="line">          name: http</span><br><span class="line">        volumeMounts:</span><br><span class="line">        - name: data</span><br><span class="line">          mountPath: /var/data</span><br><span class="line">  volumeClaimTemplates:</span><br><span class="line">  - metadata:</span><br><span class="line">      name: data      </span><br><span class="line">    spec:</span><br><span class="line">      storageClassName: managed-nfs-storage</span><br><span class="line">      accessModes:</span><br><span class="line">      - ReadWriteOnce</span><br><span class="line">      resources:</span><br><span class="line">        requests:</span><br><span class="line">          storage: 10Mi</span><br></pre></td></tr></table></figure>
+<p>两个pods依次创建</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[root@master k8sfiles]# kubectl get po</span><br><span class="line">NAME                                      READY   STATUS              RESTARTS   AGE</span><br><span class="line">kubia-0                                   0/1     ContainerCreating   0          53s</span><br><span class="line">nfs-client-provisioner-774645ccfd-p9l8w   1/1     Running             0          77s</span><br><span class="line">[root@master k8sfiles]# kubectl get po</span><br><span class="line">NAME                                      READY   STATUS              RESTARTS   AGE</span><br><span class="line">kubia-0                                   1/1     Running             0          71s</span><br><span class="line">kubia-1                                   0/1     ContainerCreating   0          15s</span><br><span class="line">nfs-client-provisioner-774645ccfd-p9l8w   1/1     Running             0          95s</span><br><span class="line">[root@master k8sfiles]# kubectl get po</span><br><span class="line">NAME                                      READY   STATUS    RESTARTS   AGE</span><br><span class="line">kubia-0                                   1/1     Running   0          95s</span><br><span class="line">kubia-1                                   1/1     Running   0          39s</span><br><span class="line">nfs-client-provisioner-774645ccfd-p9l8w   1/1     Running   0          119s</span><br></pre></td></tr></table></figure>
+<p>pvc和pv已经是bound状态</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@master k8sfiles]# kubectl get pvc</span><br><span class="line">NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          AGE</span><br><span class="line">data-kubia-0   Bound    pvc-25b1d7ef-0b77-45b4-beda-5478628f64c8   10Mi       RWO            managed-nfs-storage   47m</span><br><span class="line">data-kubia-1   Bound    pvc-3405016b-5f57-499c-b418-3b8438e94551   10Mi       RWO            managed-nfs-storage   46m</span><br><span class="line">[root@master k8sfiles]# kubectl get pv</span><br><span class="line">NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                  STORAGECLASS          REASON   AGE</span><br><span class="line">pvc-25b1d7ef-0b77-45b4-beda-5478628f64c8   10Mi       RWO            Delete           Bound    default/data-kubia-0   managed-nfs-storage            47m</span><br><span class="line">pvc-3405016b-5f57-499c-b418-3b8438e94551   10Mi       RWO            Delete           Bound    default/data-kubia-1   managed-nfs-storage            47m</span><br></pre></td></tr></table></figure>
+
+        
+        <br />
+        <div id="comment-container">
+        </div>
+        <div id="disqus_thread"></div>
+
+        <div id="lv-container">
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+        
+        
+
+        
+
+        
+
+        
+        <li>
+            <a target="_blank"  href="https://github.com/Sun-V">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-github"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>  Theme <a target="_blank" rel="noopener" href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+
+<script src="/js/index.js"></script>
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+    <script type="text/javascript">
+       (function() {
+           if (typeof LivereTower === 'function') { return; }
+
+           var j, d = document.getElementById('lv-container');
+
+           d.setAttribute('data-id','city');
+           d.setAttribute('data-uid' , 'MTAyMC80ODA3OS8yNDU3Ng==');
+
+           j = document.createElement('script');
+           j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+           j.async = true;
+
+           d.appendChild(j);
+       })();
+    </script>
+    <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+</html>
